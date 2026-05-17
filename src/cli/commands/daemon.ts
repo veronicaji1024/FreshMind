@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import pLimit from 'p-limit';
 import { watch, type FSWatcher } from 'fs';
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
@@ -309,15 +310,21 @@ async function runCrawl(vaultPath: string): Promise<void> {
           const pageWriter = new PageWriter(vaultPath);
           const ingestAgent = new IngestAgent(llm, pageWriter, vaultPath);
 
-          for (const item of result.new_items.slice(0, 3)) {
-            try {
-              const ingestResult = await ingestAgent.ingest({ url: item.url });
-              await appendLog(vaultPath, 'daemon_ingest', ingestResult.page_path,
-                `自动 ingest: ${ingestResult.claims_count} 条声明`);
-              ui.success(`  ✅ 已写入 ${ingestResult.page_path}`);
-            } catch (err) {
-              ui.warn(`  ⚠️ ingest 失败: ${(err as Error).message}`);
-            }
+          const limit = pLimit(3);
+          const ingestResults = await Promise.allSettled(
+            result.new_items.slice(0, 5).map(item =>
+              limit(async () => {
+                const ingestResult = await ingestAgent.ingest({ url: item.url });
+                await appendLog(vaultPath, 'daemon_ingest', ingestResult.page_path,
+                  `自动 ingest: ${ingestResult.claims_count} 条声明`);
+                ui.success(`  ✅ 已写入 ${ingestResult.page_path}`);
+                return ingestResult;
+              }),
+            ),
+          );
+          const failed = ingestResults.filter(r => r.status === 'rejected');
+          for (const f of failed) {
+            ui.warn(`  ⚠️ ingest 失败: ${(f as PromiseRejectedResult).reason?.message}`);
           }
           await rebuildIndex(vaultPath);
         } catch (err) {

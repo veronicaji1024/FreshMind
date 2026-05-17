@@ -85,13 +85,16 @@ export async function extractArticleLinks(
 
   const origin = new URL(listPageUrl).origin;
 
-  // 排除的路径模式（导航、分类、标签、作者等）
+  // 排除的路径模式（导航、分类、标签、作者等非文章页面）
   const excludePatterns = [
     /\/(category|tag|author|page|search|login|signup|about|contact|privacy|terms|faq|help|newsletter|presentations|columnists|consulting|archive)\b/i,
     /\/(cdn-cgi|assets|static|images|img|css|js)\//i,
     /\.(png|jpg|jpeg|gif|svg|css|js|pdf|xml|json)$/i,
     /[?#]/i, // 排除带锚点或查询参数的 URL
     /^mailto:/i,
+    /\/(docs|documentation|api-reference|reference|changelog|pricing|careers|jobs|team|press)\b/i, // 排除文档/产品页
+    /\/@[\w]+$/i, // 排除用户主页 /@username
+    /\/(?:resources|tutorials|use-cases|academy|platform|products|features|integrations|enterprise)\b/i, // 排除产品功能页
   ];
 
   // 文章链接的正向匹配模式

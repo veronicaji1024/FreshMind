@@ -44,23 +44,45 @@ export class IngestAgent {
       throw new FreshMindError('必须提供 url 或 text', 'INVALID_INPUT');
     }
 
-    // 2. LLM 结构化提取
-    const messages = buildIngestPrompt(content);
+    // 2. 内容质量门槛：太短的内容直接跳过
+    if (content.length < 200) {
+      throw new FreshMindError(
+        `内容过短（${content.length} 字），跳过 ingest`,
+        'CONTENT_TOO_SHORT',
+      );
+    }
+
+    // 3. 截断过长内容，防止 LLM 超时（保留前 8000 字）
+    const MAX_CONTENT_LENGTH = 8000;
+    const truncatedContent = content.length > MAX_CONTENT_LENGTH
+      ? content.slice(0, MAX_CONTENT_LENGTH) + '\n\n[内容已截断，仅分析前 8000 字]'
+      : content;
+
+    // 4. LLM 结构化提取
+    const messages = buildIngestPrompt(truncatedContent);
     const result = await this.llm.chatJSON<IngestResult>(messages);
 
-    // 3. 校验必要字段
+    // 5. 校验必要字段
     if (!result.title || !result.type || !Array.isArray(result.verifiable_claims)) {
       throw new FreshMindError('LLM 返回格式不符合预期', 'LLM_FORMAT_ERROR');
     }
 
-    // 4. 获取半衰期（优先用校准值）
+    // 6. Claims 质量门槛：0 条可验证声明则跳过
+    if (result.verifiable_claims.length === 0) {
+      throw new FreshMindError(
+        `"${result.title}" 未提取到可验证声明，跳过 ingest`,
+        'NO_CLAIMS',
+      );
+    }
+
+    // 7. 获取半衰期（优先用校准值）
     const halfLife = await this.getCalibratedHalfLife(result.type);
 
-    // 5. 确定目录和 slug
+    // 8. 确定目录和 slug
     const dir = TYPE_DIR_MAP[result.type] ?? 'concepts';
     const slug = this.titleToSlug(result.title);
 
-    // 6. 构建 frontmatter
+    // 9. 构建 frontmatter
     const today = new Date().toISOString().slice(0, 10);
     const meta: WikiPageMeta = {
       title: result.title,
@@ -80,7 +102,7 @@ export class IngestAgent {
       })),
     };
 
-    // 7. 构建页面正文
+    // 10. 构建页面正文
     const pageContent = `# ${result.title}
 
 ## 概述
@@ -93,17 +115,17 @@ ${result.verifiable_claims.map(c => `- ${c.claim}`).join('\n')}
 ${result.related_concepts.map(c => `- [[concepts/${this.titleToSlug(c)}]]`).join('\n')}
 `;
 
-    // 8. 写入 wiki 页面
+    // 11. 写入 wiki 页面
     const pagePath = await this.pageWriter.createPage(dir, slug, meta, pageContent);
 
-    // 9. 存储原始内容到 raw/
+    // 12. 存储原始内容到 raw/
     const rawFileName = `${today}-${slug}.md`;
     await writeFile(
       join(this.vaultPath, 'raw', rawFileName),
       `# ${result.title}\n\n来源: ${input.url ?? '手动输入'}\n日期: ${today}\n\n---\n\n${content.slice(0, 5000)}`,
     ).catch(() => {});
 
-    // 10. 追加 log.md
+    // 13. 追加 log.md
     await appendFile(
       join(this.vaultPath, 'log.md'),
       `- ${new Date().toISOString()} | ingest | ${dir}/${slug}.md | ${result.verifiable_claims.length} 条声明\n`,
