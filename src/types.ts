@@ -1,4 +1,5 @@
-// ─── 信息类型 ──────────────────────────────────
+// ===== 信息类型 =====
+
 export type InfoType =
   | 'benchmark_data'
   | 'model_capability'
@@ -10,7 +11,15 @@ export type InfoType =
 
 export type FreshnessStatus = 'fresh' | 'stale' | 'outdated' | 'expired';
 
-// ─── 原始抓取结果 ──────────────────────────────
+// ===== LLM 消息 =====
+
+export interface Message {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+// ===== 原始抓取结果 (Person A) =====
+
 export interface RawItem {
   source_id: string;
   title: string;
@@ -20,7 +29,8 @@ export interface RawItem {
   source_type: 'blog' | 'tweet' | 'podcast';
 }
 
-// ─── 可验证声明 ────────────────────────────────
+// ===== 可验证声明 =====
+
 export interface VerifiableClaim {
   claim: string;
   search_query: string;
@@ -29,23 +39,8 @@ export interface VerifiableClaim {
   status?: 'confirmed' | 'updated' | 'contradicted' | 'uncertain';
 }
 
-// ─── Wiki 页面元数据 ──────────────────────────
-export interface WikiPageMeta {
-  title: string;
-  type: InfoType;
-  created: string;
-  last_verified: string;
-  half_life_days: number;
-  freshness_status: FreshnessStatus;
-  confidence: number;
-  sources: { url: string; date: string }[];
-  related: string[];
-  tags: string[];
-  verifiable_claims: VerifiableClaim[];
-  superseded_by?: string | null;
-}
+// ===== 知识提取 =====
 
-// ─── LLM 结构化提取结果 ──────────────────────
 export interface IngestResult {
   title: string;
   summary: string;
@@ -56,16 +51,25 @@ export interface IngestResult {
   source_date: string;
 }
 
-// ─── 保鲜验证结果 ──────────────────────────────
-export interface VerificationResult {
-  claim: string;
-  status: 'confirmed' | 'updated' | 'contradicted' | 'uncertain';
-  evidence: string;
-  new_info?: string;
-  source_url?: string;
+// ===== Wiki 页面 =====
+
+export interface WikiPageMeta {
+  title: string;
+  type: InfoType;
+  created: string;
+  last_verified: string;
+  half_life_days: number;
+  freshness_status: FreshnessStatus | 'archived';
+  confidence: number;
+  sources: { url: string; date: string }[];
+  related: string[];
+  tags: string[];
+  verifiable_claims: VerifiableClaim[];
+  superseded_by?: string | null;
 }
 
-// ─── 新鲜度扫描条目 ────────────────────────────
+// ===== 新鲜度 =====
+
 export interface FreshnessEntry {
   page_path: string;
   meta: WikiPageMeta;
@@ -74,7 +78,16 @@ export interface FreshnessEntry {
   days_since_verified: number;
 }
 
-// ─── 校准事件 ──────────────────────────────────
+export interface VerificationResult {
+  claim: string;
+  status: 'confirmed' | 'updated' | 'contradicted' | 'uncertain';
+  evidence: string;
+  new_info?: string;
+  source_url?: string;
+}
+
+// ===== 校准 =====
+
 export interface CalibrationEvent {
   type: InfoType;
   action: 'update' | 'archive' | 'ignore' | 'manual_edit' | 'confirmed_3x';
@@ -82,7 +95,17 @@ export interface CalibrationEvent {
   timestamp: string;
 }
 
-// ─── Crawl 统计 ────────────────────────────────
+// ===== 搜索 =====
+
+export interface SearchResult {
+  title: string;
+  url: string;
+  content: string;
+  score: number;
+}
+
+// ===== Crawl (Person A) =====
+
 export interface CrawlStats {
   total: number;
   new: number;
@@ -95,7 +118,8 @@ export interface CrawlResult {
   stats: CrawlStats;
 }
 
-// ─── 信息源配置 ────────────────────────────────
+// ===== 信息源配置 (Person A) =====
+
 export interface BlogSource {
   id: string;
   name: string;
@@ -129,7 +153,8 @@ export interface SourcesConfig {
   podcasts: PodcastSource[];
 }
 
-// ─── 去重状态 ──────────────────────────────────
+// ===== 去重状态 (Person A) =====
+
 export interface DedupState {
   seenItems: Record<string, number>;
   lastCrawl: string;
@@ -140,7 +165,8 @@ export interface DedupState {
   };
 }
 
-// ─── Index 条目 ────────────────────────────────
+// ===== Index 条目 =====
+
 export interface IndexEntry {
   page_path: string;
   title: string;
@@ -149,7 +175,8 @@ export interface IndexEntry {
   last_verified: string;
 }
 
-// ─── 应用配置 ──────────────────────────────────
+// ===== 应用配置 =====
+
 export interface AppConfig {
   vault_path: string;
   llm: {
@@ -166,4 +193,27 @@ export interface AppConfig {
     max_items: number;
     threshold: number;
   };
+}
+
+// ===== Person B 简化配置 =====
+
+export interface FreshMindConfig {
+  vaultPath: string;
+  siliconflowApiKey?: string;
+  tavilyApiKey?: string;
+  llm: {
+    model: string;
+    baseUrl: string;
+    temperature: number;
+    maxTokens: number;
+  };
+}
+
+// ===== 错误 =====
+
+export class FreshMindError extends Error {
+  constructor(message: string, public code: string) {
+    super(message);
+    this.name = 'FreshMindError';
+  }
 }
