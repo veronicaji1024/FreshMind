@@ -121,7 +121,7 @@ function getFreshnessCheckPriority(entries: WikiEntry[]): WikiEntry[] {
 ```typescript
 interface CalibrationEvent {
   type: string;              // 信息类型 (benchmark_data, model_capability, ...)
-  action: 'update' | 'archive' | 'ignore' | 'manual_edit' | 'confirmed_3x';
+  action: 'update' | 'archive' | 'ignore' | 'manual_edit' | 'confirmed_3x' | 'skip_then_edit';
   page_path: string;
   timestamp: string;
 }
@@ -131,6 +131,7 @@ function calibrate(currentHalfLife: number, event: CalibrationEvent): number {
     case 'update':        return currentHalfLife;          // 猜对了，不变
     case 'ignore':        return currentHalfLife * 1.5;    // 太短了，上调
     case 'manual_edit':   return currentHalfLife * 0.7;    // 太长了，下调
+    case 'skip_then_edit': return currentHalfLife * 0.85;  // 略长，skip后30天内被编辑
     case 'confirmed_3x':  return currentHalfLife * 1.3;    // 已证明稳定，延长
     default:              return currentHalfLife;
   }
@@ -196,6 +197,48 @@ Obsidian 中用户直接编辑某个 wiki 页面并保存
 │  4. 更新该页面的 last_verified = today          │
 └────────────────────────────────────────────────┘
 ```
+
+### 自进化机制：Pattern 学习 + 周期校准
+
+传统的校准方式是对单次用户行为立即反应（如用户编辑了一个页面就立刻调低半衰期）。
+FreshMind 采用 **Pattern 学习** 模式——不是每次编辑都学，而是积累足够信号后批量分析。
+
+#### 事件积累
+
+daemon 通过 `fs.watch` 监听 vault 目录的 `.md` 文件变更，每次变更记录一条 `EditEvent`：
+
+```yaml
+# _meta/edit_events.yaml（自动生成）
+events:
+  - timestamp: "2026-05-17T10:30:00Z"
+    page_path: "models/gpt-4o.md"
+    info_type: model_capability
+    previous_status: fresh           # 修改前的 freshness_status
+    claims_changed: true
+    claims_added: 1
+    claims_removed: 2
+    claims_modified: 1
+    content_length_delta: 150
+last_analysis: "2026-05-10T00:00:00Z"
+```
+
+只记录有实质变化的编辑（claims 有变或内容变化 ≥50 字符），微小改动忽略。
+
+#### Pattern 分析（周期性，默认每 168h / 周）
+
+分析积累的事件，提取三类信号：
+
+| 信号类型 | 含义 | 触发阈值 | 校准动作 |
+|---------|------|---------|---------|
+| `false_negative` | fresh 页面的 claims 被用户修改 → 系统漏报了过时 | 同类型 ≥3 次 | 半衰期 × 0.7 |
+| `skip_then_edit` | stale 页面被用户手动更新 → 半衰期略长 | 同类型 ≥2 次 | 半衰期 × 0.85 |
+| `type_edit_frequency` | 各类型的 claims 编辑频率统计 | 仅记录，不触发 | 供未来 LLM 分析 |
+
+#### 为什么不是每次编辑都校准？
+
+- 用户编辑页面的原因很多：修复错别字、补充细节、整理格式——这些不意味着信息过时
+- 只有 **claims 变化**（新增/删除/修改事实性声明）才构成有效信号
+- 只有 **同类型多次出现相同 pattern** 才触发校准，避免单次偶然事件影响全局参数
 
 ---
 
@@ -647,6 +690,12 @@ $ fm query "AI coding tools 的竞争格局是什么？"
 $ fm update <page_path> --action update      # Agent 自动修订
 $ fm update <page_path> --action archive     # 标记为历史
 $ fm update <page_path> --action ignore      # 延长半衰期
+
+# ─── 自进化后台进程 ──────────────────────────────────────────
+$ fm daemon [--crawl-interval 6] [--freshcheck-interval 24] [--analysis-interval 168]
+# 长驻进程：定时 crawl + freshcheck + 行为 pattern 学习
+# fs.watch 监听 vault 变更 → 记录 EditEvent → 周期性分析 pattern → 阈值校准
+# Ctrl+C 优雅退出
 
 # ─── 查看状态 ─────────────────────────────────────────────
 $ fm status
