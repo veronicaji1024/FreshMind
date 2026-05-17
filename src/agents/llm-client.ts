@@ -1,7 +1,6 @@
 import { FreshMindError } from '../types.js';
 import type { Message } from '../types.js';
 import { LLM_DEFAULTS } from '../config/defaults.js';
-import { fetchWithTimeout } from '../fetch-with-timeout.js';
 
 export interface LLMClientOptions {
   model?: string;
