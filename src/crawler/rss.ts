@@ -2,12 +2,21 @@ import Parser from 'rss-parser';
 import type { RawItem } from '../types.js';
 import { CRAWL_DEFAULTS } from '../config/defaults.js';
 
-const parser = new Parser({
-  timeout: 10000,
-  headers: {
-    'User-Agent': 'FreshMind/0.1 (Knowledge Freshness Bot)',
-  },
-});
+const parser = new Parser();
+
+/** 用 fetch 下载 XML，再用 rss-parser 解析，解决大文件超时问题 */
+async function fetchAndParse(feedUrl: string) {
+  const response = await fetch(feedUrl, {
+    headers: { 'User-Agent': 'FreshMind/0.1 (Knowledge Freshness Bot)' },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(60000),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${feedUrl}`);
+  }
+  const xml = await response.text();
+  return parser.parseString(xml);
+}
 
 export async function fetchRss(
   sourceId: string,
@@ -15,7 +24,7 @@ export async function fetchRss(
   lookbackHours = CRAWL_DEFAULTS.lookbackHours,
   maxItems = CRAWL_DEFAULTS.maxArticlesPerSource,
 ): Promise<RawItem[]> {
-  const feed = await parser.parseURL(feedUrl);
+  const feed = await fetchAndParse(feedUrl);
   const cutoff = Date.now() - lookbackHours * 60 * 60 * 1000;
 
   const items: RawItem[] = [];

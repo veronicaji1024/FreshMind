@@ -83,25 +83,54 @@ export async function extractArticleLinks(
   const links: string[] = [];
   const seen = new Set<string>();
 
-  // 找 <a> 中 href 包含常见文章路径模式的链接
+  const origin = new URL(listPageUrl).origin;
+
+  // 排除的路径模式（导航、分类、标签、作者等）
+  const excludePatterns = [
+    /\/(category|tag|author|page|search|login|signup|about|contact|privacy|terms|faq|help|newsletter|presentations|columnists|consulting|archive)\b/i,
+    /\/(cdn-cgi|assets|static|images|img|css|js)\//i,
+    /\.(png|jpg|jpeg|gif|svg|css|js|pdf|xml|json)$/i,
+    /[?#]/i, // 排除带锚点或查询参数的 URL
+    /^mailto:/i,
+  ];
+
+  // 文章链接的正向匹配模式
+  const articlePatterns = [
+    /\/blog\//i, /\/engineering\//i, /\/post\//i, /\/article\//i,
+    /\/newsletter\//i, /\/p\//i, /\/news\//i, /\/story\//i,
+    /\/\d{4}\//, // 年份路径 /2026/
+    /\/[a-z0-9][\w-]{8,}$/i, // slug 风格路径
+  ];
+
   const anchors = doc.querySelectorAll('a[href]');
   for (const a of anchors) {
     if (links.length >= maxLinks) break;
     const href = (a as Element).getAttribute('href');
-    if (!href) continue;
+    if (!href || href === '#' || href === '/') continue;
 
-    const fullUrl = new URL(href, listPageUrl).href;
+    let fullUrl: string;
+    try {
+      fullUrl = new URL(href, listPageUrl).href;
+    } catch {
+      continue;
+    }
+
     if (seen.has(fullUrl)) continue;
     seen.add(fullUrl);
 
-    // 过滤掉导航/分类链接，保留可能是文章的链接
-    if (
-      fullUrl.startsWith(new URL(listPageUrl).origin) &&
-      !fullUrl.endsWith('/') &&
-      (href.includes('/blog/') || href.includes('/engineering/') ||
-       href.includes('/post/') || href.includes('/article/') ||
-       href.match(/\/\d{4}\//) || href.match(/\/[a-z0-9-]{10,}/))
-    ) {
+    // 必须同源
+    if (!fullUrl.startsWith(origin)) continue;
+    // 排除非文章链接
+    if (excludePatterns.some(p => p.test(fullUrl))) continue;
+    // 排除首页自身
+    if (fullUrl === origin || fullUrl === origin + '/') continue;
+
+    // 链接文本长度 > 10 通常是文章标题
+    const linkText = (a as Element).textContent?.trim() ?? '';
+    const hasArticleTitle = linkText.length > 10;
+
+    // 路径匹配文章模式 或 链接文本像标题
+    if (articlePatterns.some(p => p.test(fullUrl)) || hasArticleTitle) {
       links.push(fullUrl);
     }
   }
