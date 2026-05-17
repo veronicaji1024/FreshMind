@@ -1,7 +1,10 @@
 ---
 name: ingest
-description: 从指定 URL 提取文章正文内容
+description: 从指定 URL 提取文章正文内容，有 API Key 时调用 LLM 写入 wiki
 user_invocable: true
+requires: [vault_initialized, tsc_compiled]
+fallback: "无 SILICONFLOW_API_KEY 时降级为纯内容提取（显示标题和正文预览，不写入 wiki）"
+deterministic_steps: ["npx tsc", "node dist/cli/index.js ingest <url>"]
 ---
 
 # Ingest — 单篇文章内容提取

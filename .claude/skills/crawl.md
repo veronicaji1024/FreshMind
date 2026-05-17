@@ -2,6 +2,9 @@
 name: crawl
 description: 抓取所有已启用的 RSS/博客信息源，返回新发现的文章列表
 user_invocable: true
+requires: [vault_initialized, tsc_compiled]
+fallback: "仅执行抓取，不调用 LLM ingest（无 SILICONFLOW_API_KEY 时自动降级）"
+deterministic_steps: ["npx tsc", "node dist/cli/index.js crawl"]
 ---
 
 # Crawl — 信息源抓取

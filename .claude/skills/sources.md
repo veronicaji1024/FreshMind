@@ -2,6 +2,9 @@
 name: sources
 description: 管理 FreshMind 信息源（查看/添加/删除/启用/禁用）
 user_invocable: true
+requires: [vault_initialized, tsc_compiled]
+fallback: "全部确定性操作，无 LLM 依赖"
+deterministic_steps: ["npx tsc", "node dist/cli/index.js sources list"]
 ---
 
 # Sources — 信息源管理

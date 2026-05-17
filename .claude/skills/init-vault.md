@@ -2,6 +2,9 @@
 name: init-vault
 description: 初始化 FreshMind wiki vault 目录结构
 user_invocable: true
+requires: [tsc_compiled]
+fallback: "全部确定性操作，无 LLM 依赖"
+deterministic_steps: ["npx tsc", "node dist/cli/index.js init"]
 ---
 
 # Init Vault — 初始化 Wiki

@@ -2,6 +2,9 @@
 name: rebuild-index
 description: 重建 wiki 的 index.md 索引文件
 user_invocable: true
+requires: [vault_initialized, tsc_compiled]
+fallback: "全部确定性操作，无 LLM 依赖"
+deterministic_steps: ["npx tsc", "node -e \"import('./dist/wiki/index-manager.js').then(m => m.rebuildIndex('./freshmind-wiki'))\""]
 ---
 
 # Rebuild Index — 重建 Wiki 索引
