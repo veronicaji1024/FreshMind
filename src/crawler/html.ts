@@ -70,7 +70,7 @@ export function extractFromHtml(html: string, url: string): ExtractedContent {
 /** 从列表页提取文章链接 */
 export async function extractArticleLinks(
   listPageUrl: string,
-  maxLinks = 5,
+  maxLinks = 100,
 ): Promise<string[]> {
   const response = await fetch(listPageUrl, {
     headers: { 'User-Agent': USER_AGENT },

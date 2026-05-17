@@ -48,13 +48,21 @@ export interface TriageResult {
 
 // ===== 知识提取 =====
 
+export interface IngestSection {
+  heading: string;
+  key_points: string[];
+  why: string;
+  so_what: string;
+}
+
 export interface IngestResult {
   title: string;
-  summary: string;
+  one_liner: string;        // 一句话结论
+  summary?: string;          // brief 模式用
+  sections?: IngestSection[]; // deep 模式用
   type: InfoType;
   verifiable_claims: VerifiableClaim[];
   entities: string[];
-  related_concepts: string[];
   source_date: string;
 }
 

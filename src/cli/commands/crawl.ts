@@ -11,7 +11,7 @@ export function registerCrawl(program: Command) {
     .command('crawl')
     .description('抓取所有已启用信息源的新内容（有 API Key 时自动 ingest）')
     .option('--vault <path>', 'vault 目录路径')
-    .option('--max-ingest <n>', '最多自动 ingest 几篇', '10')
+    .option('--max-ingest <n>', '最多自动 ingest 几篇', '100')
     .option('--concurrency <n>', 'ingest 并发数', '3')
     .action(async (opts) => {
       const config = await loadAppConfig(opts.vault);

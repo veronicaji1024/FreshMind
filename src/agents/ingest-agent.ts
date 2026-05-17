@@ -136,7 +136,7 @@ export class IngestAgent {
       freshness_status: 'fresh',
       confidence: 0.9,
       sources: input.url ? [{ url: input.url, date: today }] : [],
-      related: result.related_concepts.map(c => `[[concepts/${this.titleToSlug(c)}]]`),
+      related: [],
       tags: result.entities,
       verifiable_claims: result.verifiable_claims.map(c => ({
         ...c,
@@ -146,17 +146,7 @@ export class IngestAgent {
     };
 
     // 10. 构建页面正文
-    const pageContent = `# ${result.title}
-
-## 概述
-${result.summary}
-
-## 关键信息
-${result.verifiable_claims.map(c => `- ${c.claim}`).join('\n')}
-
-## 相关链接
-${result.related_concepts.map(c => `- [[concepts/${this.titleToSlug(c)}]]`).join('\n')}
-`;
+    const pageContent = this.buildPageContent(result, depth);
 
     // 11. 写入 wiki 页面
     const pagePath = await this.pageWriter.createPage(dir, slug, meta, pageContent);
@@ -199,6 +189,41 @@ ${result.related_concepts.map(c => `- [[concepts/${this.titleToSlug(c)}]]`).join
       // 无校准数据
     }
     return DEFAULT_HALF_LIFE[type as keyof typeof DEFAULT_HALF_LIFE] ?? 180;
+  }
+
+  private buildPageContent(result: IngestResult, depth: IngestDepth): string {
+    const lines: string[] = [`# ${result.title}`, ''];
+
+    // 一句话结论
+    if (result.one_liner) {
+      lines.push(`> **${depth === 'brief' ? '要点' : '一句话'}：** ${result.one_liner}`, '');
+    }
+
+    if (depth === 'brief' || !result.sections?.length) {
+      // Brief 模式：一段完整的话
+      lines.push(result.summary ?? result.verifiable_claims.map(c => c.claim).join('。') + '。');
+      lines.push('');
+    } else {
+      // Deep 模式：目录 + 分节
+      lines.push('## 目录', '');
+      for (const sec of result.sections) {
+        lines.push(`- ${sec.heading}`);
+      }
+      lines.push('', '---', '');
+
+      for (const sec of result.sections) {
+        lines.push(`## ${sec.heading}`, '');
+        // key_points 展开为列表
+        for (const point of sec.key_points ?? []) {
+          lines.push(`- ${point}`);
+        }
+        lines.push('');
+        lines.push(`**为什么重要：** ${sec.why}`, '');
+        lines.push(`**So What：** ${sec.so_what}`, '');
+      }
+    }
+
+    return lines.join('\n');
   }
 
   private titleToSlug(title: string): string {
