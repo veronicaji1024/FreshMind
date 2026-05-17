@@ -62,7 +62,7 @@ export async function loadConfig(vaultPath: string): Promise<FreshMindConfig> {
   dotenv.config();
 
   const config: FreshMindConfig = {
-    vaultPath,
+    vaultPath: path.resolve(vaultPath),
     siliconflowApiKey: process.env.SILICONFLOW_API_KEY,
     tavilyApiKey: process.env.TAVILY_API_KEY,
     llm: { ...LLM_DEFAULTS },

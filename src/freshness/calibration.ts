@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import { DEFAULT_HALF_LIFE, CALIBRATION_FACTORS } from '../config/defaults.js';
+import { DEFAULT_HALF_LIFE, CALIBRATION_FACTORS, HALF_LIFE_BOUNDS } from '../config/defaults.js';
 import type { InfoType, CalibrationEvent } from '../types.js';
 
 interface CalibrationData {
@@ -96,20 +96,28 @@ export function calibrate(
   currentHalfLife: number,
   action: CalibrationEvent['action'],
 ): number {
+  let result: number;
   switch (action) {
     case 'update':
-      return currentHalfLife;
+      result = currentHalfLife;
+      break;
     case 'ignore':
-      return currentHalfLife * CALIBRATION_FACTORS.ignore;
+      result = currentHalfLife * CALIBRATION_FACTORS.ignore;
+      break;
     case 'manual_edit':
-      return currentHalfLife * CALIBRATION_FACTORS.manual_edit;
+      result = currentHalfLife * CALIBRATION_FACTORS.manual_edit;
+      break;
     case 'skip_then_edit':
-      return currentHalfLife * CALIBRATION_FACTORS.skip_then_edit;
+      result = currentHalfLife * CALIBRATION_FACTORS.skip_then_edit;
+      break;
     case 'confirmed_3x':
-      return currentHalfLife * CALIBRATION_FACTORS.confirmed_3x;
+      result = currentHalfLife * CALIBRATION_FACTORS.confirmed_3x;
+      break;
     case 'archive':
-      return currentHalfLife;
+      result = currentHalfLife;
+      break;
     default:
-      return currentHalfLife;
+      result = currentHalfLife;
   }
+  return Math.max(HALF_LIFE_BOUNDS.min, Math.min(HALF_LIFE_BOUNDS.max, result));
 }

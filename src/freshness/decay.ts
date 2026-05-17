@@ -10,8 +10,10 @@ export function calculateFreshness(halfLifeDays: number, daysSinceVerified: numb
   if (halfLifeDays <= 0) {
     throw new Error('half_life_days must be positive');
   }
+  // 未来日期（负数天数）视为刚刚验证过
+  const clampedDays = Math.max(0, daysSinceVerified);
   const lambda = Math.LN2 / halfLifeDays;
-  return Math.exp(-lambda * daysSinceVerified);
+  return Math.exp(-lambda * clampedDays);
 }
 
 export function getFreshnessStatus(score: number): 'fresh' | 'stale' | 'outdated' | 'expired' {
@@ -22,6 +24,11 @@ export function getFreshnessStatus(score: number): 'fresh' | 'stale' | 'outdated
 }
 
 export function daysBetween(date1: Date, date2: Date): number {
+  const t1 = date1.getTime();
+  const t2 = date2.getTime();
+  if (Number.isNaN(t1) || Number.isNaN(t2)) {
+    throw new Error(`无效日期: ${String(date1)} 或 ${String(date2)}`);
+  }
   const MS_PER_DAY = 1000 * 60 * 60 * 24;
-  return Math.abs(date2.getTime() - date1.getTime()) / MS_PER_DAY;
+  return Math.abs(t2 - t1) / MS_PER_DAY;
 }

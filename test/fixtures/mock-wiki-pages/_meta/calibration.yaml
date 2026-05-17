@@ -1,0 +1,11 @@
+# 半衰期自校准参数（自动生成，请勿手动编辑）
+last_updated: 2026-05-17
+calibrated_half_life:
+  model_capability: 90
+calibration_log:
+  - date: 2026-05-17
+    type: model_capability
+    action: ignore
+    page: models/gpt-4o.md
+    old_half_life: 60
+    new_half_life: 90

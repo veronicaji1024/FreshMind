@@ -4,6 +4,11 @@ import type { FreshnessEntry, VerificationResult } from '../types.js';
 
 type VerifiedEntry = FreshnessEntry & { verification: VerificationResult[] };
 
+/** 转义 markdown table cell 中的特殊字符 */
+function escapeCell(value: string | undefined | null): string {
+  return (value ?? '-').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+}
+
 export class ReportWriter {
   constructor(private vaultPath: string) {}
 
@@ -44,7 +49,7 @@ export class ReportWriter {
       md += `| 页面 | 声明 | 证据 | 新信息 |\n`;
       md += `|------|------|------|--------|\n`;
       for (const { entry, vr } of groups.contradicted) {
-        md += `| ${entry.page_path} | ${vr.claim} | ${vr.evidence} | ${vr.new_info ?? '-'} |\n`;
+        md += `| ${escapeCell(entry.page_path)} | ${escapeCell(vr.claim)} | ${escapeCell(vr.evidence)} | ${escapeCell(vr.new_info)} |\n`;
       }
       md += '\n';
     }
@@ -54,7 +59,7 @@ export class ReportWriter {
       md += `| 页面 | 声明 | 证据 | 新信息 |\n`;
       md += `|------|------|------|--------|\n`;
       for (const { entry, vr } of groups.updated) {
-        md += `| ${entry.page_path} | ${vr.claim} | ${vr.evidence} | ${vr.new_info ?? '-'} |\n`;
+        md += `| ${escapeCell(entry.page_path)} | ${escapeCell(vr.claim)} | ${escapeCell(vr.evidence)} | ${escapeCell(vr.new_info)} |\n`;
       }
       md += '\n';
     }
@@ -64,7 +69,7 @@ export class ReportWriter {
       md += `| 页面 | 声明 | 证据 |\n`;
       md += `|------|------|------|\n`;
       for (const { entry, vr } of groups.confirmed) {
-        md += `| ${entry.page_path} | ${vr.claim} | ${vr.evidence} |\n`;
+        md += `| ${escapeCell(entry.page_path)} | ${escapeCell(vr.claim)} | ${escapeCell(vr.evidence)} |\n`;
       }
       md += '\n';
     }
@@ -74,7 +79,7 @@ export class ReportWriter {
       md += `| 页面 | 声明 | 原因 |\n`;
       md += `|------|------|------|\n`;
       for (const { entry, vr } of groups.uncertain) {
-        md += `| ${entry.page_path} | ${vr.claim} | ${vr.evidence} |\n`;
+        md += `| ${escapeCell(entry.page_path)} | ${escapeCell(vr.claim)} | ${escapeCell(vr.evidence)} |\n`;
       }
       md += '\n';
     }

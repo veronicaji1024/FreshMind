@@ -1,33 +1,36 @@
 ---
-title: "GPT-4o"
+title: GPT-4o
 type: model_capability
-created: 2025-11-01
-last_verified: 2026-01-20
-half_life_days: 60
+created: 2025-11-01T00:00:00.000Z
+last_verified: '2026-05-17'
+half_life_days: 90
 freshness_status: fresh
 confidence: 0.85
 sources:
-  - url: "https://openai.com/index/hello-gpt-4o/"
-    date: 2025-11-01
+  - url: 'https://openai.com/index/hello-gpt-4o/'
+    date: 2025-11-01T00:00:00.000Z
 related:
-  - "[[entities/openai]]"
-  - "[[models/claude-opus-4-6]]"
-tags: [GPT-4o, OpenAI, 多模态]
+  - '[[entities/openai]]'
+  - '[[models/claude-opus-4-6]]'
+tags:
+  - GPT-4o
+  - OpenAI
+  - 多模态
 verifiable_claims:
-  - claim: "GPT-4o 是 OpenAI 最强的多模态模型"
-    search_query: "GPT-4o OpenAI strongest multimodal model 2026"
+  - claim: GPT-4o 是 OpenAI 最强的多模态模型
+    search_query: GPT-4o OpenAI strongest multimodal model 2026
     confidence: 0.7
-    last_checked: 2026-01-20
+    last_checked: 2026-01-20T00:00:00.000Z
     status: confirmed
-  - claim: "GPT-4o 在 MMLU 上得分 88.7%"
-    search_query: "GPT-4o MMLU benchmark score"
+  - claim: GPT-4o 在 MMLU 上得分 88.7%
+    search_query: GPT-4o MMLU benchmark score
     confidence: 0.8
-    last_checked: 2026-01-20
+    last_checked: 2026-01-20T00:00:00.000Z
     status: confirmed
-  - claim: "GPT-4o 支持实时语音对话"
-    search_query: "GPT-4o real-time voice conversation support"
+  - claim: GPT-4o 支持实时语音对话
+    search_query: GPT-4o real-time voice conversation support
     confidence: 0.9
-    last_checked: 2026-01-20
+    last_checked: 2026-01-20T00:00:00.000Z
     status: confirmed
 ---
 

@@ -16,12 +16,21 @@ export class FreshnessAgent {
     // 1. Web 搜索
     const searchResults = await this.search.search(claim.search_query, 3);
 
-    // 2. 格式化搜索结果
+    // 2. 搜索无结果时直接返回 uncertain，跳过 LLM 调用
+    if (searchResults.length === 0) {
+      return {
+        claim: claim.claim,
+        status: 'uncertain',
+        evidence: '无法找到相关搜索结果，跳过验证',
+      };
+    }
+
+    // 3. 格式化搜索结果
     const formattedResults = searchResults
       .map((r, i) => `[${i + 1}] ${r.title}\n${r.content}\n来源: ${r.url}`)
       .join('\n\n');
 
-    // 3. LLM 判断
+    // 4. LLM 判断
     const messages = buildVerifyPrompt(claim.claim, claimDate, formattedResults);
     const result = await this.llm.chatJSON<VerificationResult>(messages);
 
