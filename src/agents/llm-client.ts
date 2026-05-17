@@ -12,7 +12,7 @@ export interface LLMClientOptions {
 }
 
 const DEFAULT_MAX_RETRIES = 2;
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 120_000;
 
 export class LLMClient {
   private model: string;
@@ -85,7 +85,7 @@ export class LLMClient {
             'LLM_API_ERROR',
           );
           if (attempt < this.maxRetries) {
-            await sleep(1000 * (attempt + 1)); // 退避: 1s, 2s
+            await sleep(3000 * (attempt + 1)); // 退避: 3s, 6s
             continue;
           }
           throw lastError;
