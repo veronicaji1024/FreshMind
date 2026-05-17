@@ -48,6 +48,12 @@ export const CALIBRATION_FACTORS = {
   confirmed_3x: 1.3,
 } as const;
 
+/** 半衰期上下限（天） */
+export const HALF_LIFE_BOUNDS = {
+  min: 7,
+  max: 1095,
+} as const;
+
 /** Wiki 目录 → InfoType 映射 */
 export const DIR_TYPE_MAP: Record<string, InfoType[]> = {
   entities: ['company_strategy', 'person_move'],

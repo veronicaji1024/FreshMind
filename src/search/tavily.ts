@@ -1,5 +1,6 @@
 import { FreshMindError } from '../types.js';
 import type { SearchResult } from '../types.js';
+import { fetchWithTimeout } from '../fetch-with-timeout.js';
 
 export class TavilySearch {
   private apiKey: string;
@@ -16,7 +17,7 @@ export class TavilySearch {
   }
 
   async search(query: string, maxResults: number = 5): Promise<SearchResult[]> {
-    const response = await fetch('https://api.tavily.com/search', {
+    const response = await fetchWithTimeout('https://api.tavily.com/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -25,6 +26,7 @@ export class TavilySearch {
         max_results: maxResults,
         search_depth: 'basic',
       }),
+      timeoutMs: 30_000,
     });
 
     if (!response.ok) {

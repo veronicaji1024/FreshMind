@@ -1,6 +1,7 @@
 import { FreshMindError } from '../types.js';
 import type { Message } from '../types.js';
 import { LLM_DEFAULTS } from '../config/defaults.js';
+import { fetchWithTimeout } from '../fetch-with-timeout.js';
 
 export interface LLMClientOptions {
   model?: string;
@@ -46,13 +47,14 @@ export class LLMClient {
       body.response_format = options.response_format;
     }
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      timeoutMs: 60_000, // LLM 调用给 60 秒
     });
 
     if (!response.ok) {

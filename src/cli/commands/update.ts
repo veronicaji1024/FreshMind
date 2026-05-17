@@ -6,6 +6,7 @@ import { TavilySearch } from '../../search/tavily.js';
 import { PageReader } from '../../wiki/page-reader.js';
 import { PageWriter } from '../../wiki/page-writer.js';
 import { CalibrationEngine } from '../../freshness/calibration.js';
+import { buildUpdatePrompt } from '../../agents/prompts/index.js';
 import { FreshMindError } from '../../types.js';
 import type { CalibrationEvent } from '../../types.js';
 
@@ -33,7 +34,6 @@ export const updateCommand = new Command('update')
 
       switch (action) {
         case 'update': {
-          // 搜索最新信息 + LLM 更新
           const llm = new LLMClient({
             model: config.llm.model,
             baseUrl: config.llm.baseUrl,
@@ -42,24 +42,51 @@ export const updateCommand = new Command('update')
 
           // 搜索每个 claim 的最新信息
           const claims = meta.verifiable_claims ?? [];
-          const updates: string[] = [];
+          const allSearchResults: string[] = [];
 
           for (const claim of claims) {
             try {
               const results = await tavilySearch.search(claim.search_query, 3);
-              if (results.length > 0) {
-                updates.push(`- ${claim.claim}: ${results[0].content.slice(0, 200)}`);
+              for (const r of results) {
+                allSearchResults.push(`[${r.title}] ${r.content.slice(0, 300)}\n来源: ${r.url}`);
               }
             } catch {
               // 跳过搜索失败的 claim
             }
           }
 
-          // 更新 frontmatter
-          await pageWriter.updatePage(normalizedPath, {
+          if (allSearchResults.length === 0) {
+            spinner.succeed(`${normalizedPath} 无新信息，已刷新验证日期`);
+            await pageWriter.updatePage(normalizedPath, {
+              last_verified: today,
+            });
+            break;
+          }
+
+          // 用 LLM 智能分析更新
+          spinner.text = '正在用 LLM 分析更新...';
+          const messages = buildUpdatePrompt(
+            meta.title ?? normalizedPath,
+            content,
+            allSearchResults.join('\n\n'),
+          );
+          const analysis = await llm.chatJSON<{
+            needs_update: boolean;
+            summary: string;
+            updated_claims?: { original: string; updated: string; status: string }[];
+          }>(messages);
+
+          // 更新 frontmatter 和内容
+          const updateMeta: Record<string, unknown> = {
             last_verified: today,
             freshness_status: 'fresh',
-          }, updates.length > 0 ? `\n## 更新记录 (${today})\n${updates.join('\n')}` : undefined);
+          };
+
+          const appendContent = analysis.needs_update && analysis.summary
+            ? `\n## 更新记录 (${today})\n${analysis.summary}`
+            : undefined;
+
+          await pageWriter.updatePage(normalizedPath, updateMeta, appendContent);
 
           // 记录校准事件
           await calibration.recordEvent({
@@ -69,7 +96,11 @@ export const updateCommand = new Command('update')
             timestamp: new Date().toISOString(),
           });
 
-          spinner.succeed(`已更新 ${normalizedPath} (last_verified = ${today})`);
+          if (analysis.needs_update) {
+            spinner.succeed(`已智能更新 ${normalizedPath}: ${analysis.summary}`);
+          } else {
+            spinner.succeed(`${normalizedPath} 信息仍然有效 (last_verified = ${today})`);
+          }
           break;
         }
 

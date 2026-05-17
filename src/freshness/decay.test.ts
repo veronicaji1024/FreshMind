@@ -34,6 +34,11 @@ describe('calculateFreshness', () => {
     expect(() => calculateFreshness(0, 10)).toThrow();
     expect(() => calculateFreshness(-5, 10)).toThrow();
   });
+
+  it('负数 daysSinceVerified（未来日期）clamp 到 0，返回 1', () => {
+    expect(calculateFreshness(60, -10)).toBe(1);
+    expect(calculateFreshness(45, -100)).toBe(1);
+  });
 });
 
 describe('getFreshnessStatus', () => {
@@ -75,5 +80,10 @@ describe('daysBetween', () => {
     const d1 = new Date('2026-01-01');
     const d2 = new Date('2026-03-01');
     expect(daysBetween(d1, d2)).toBe(daysBetween(d2, d1));
+  });
+
+  it('无效日期应抛出错误', () => {
+    expect(() => daysBetween(new Date('invalid'), new Date())).toThrow('无效');
+    expect(() => daysBetween(new Date(), new Date('not-a-date'))).toThrow('无效');
   });
 });
