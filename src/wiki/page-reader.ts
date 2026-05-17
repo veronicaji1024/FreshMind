@@ -98,4 +98,12 @@ export class PageReader {
     }
     return this.sourceUrlIndex.get(url) ?? null;
   }
+
+  /** 写入成功后注册 URL 到内存索引，解决并行竞态 */
+  registerUrl(url: string, pagePath: string): void {
+    if (!this.sourceUrlIndex) {
+      this.sourceUrlIndex = new Map();
+    }
+    this.sourceUrlIndex.set(url, pagePath);
+  }
 }

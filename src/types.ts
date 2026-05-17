@@ -39,6 +39,13 @@ export interface VerifiableClaim {
   status?: 'confirmed' | 'updated' | 'contradicted' | 'uncertain';
 }
 
+// ===== 内容分类 =====
+
+export interface TriageResult {
+  depth: 'brief' | 'deep';
+  reason: string;
+}
+
 // ===== 知识提取 =====
 
 export interface IngestResult {

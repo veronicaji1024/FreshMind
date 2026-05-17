@@ -76,7 +76,8 @@ export function registerCrawl(program: Command) {
                   skipped++;
                   continue;
                 }
-                ui.success(`  ✅ ${ingestResult.page_path} (${ingestResult.claims_count} 条声明)`);
+                const depthTag = ingestResult.claims_count <= 3 ? '📋' : '📖';
+                ui.success(`  ${depthTag} ${ingestResult.page_path} (${ingestResult.claims_count} 条声明)`);
                 ingested++;
               } else {
                 const errMsg = r.reason?.message ?? String(r.reason);

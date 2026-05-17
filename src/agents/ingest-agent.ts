@@ -1,9 +1,10 @@
 import { LLMClient } from './llm-client.js';
-import { buildIngestPrompt } from './prompts/index.js';
+import { buildIngestPrompt, buildTriagePrompt } from './prompts/index.js';
+import type { IngestDepth } from './prompts/ingest.js';
 import { PageWriter } from '../wiki/page-writer.js';
 import { PageReader } from '../wiki/page-reader.js';
 import { DEFAULT_HALF_LIFE, TYPE_DIR_MAP } from '../config/defaults.js';
-import type { IngestResult, WikiPageMeta } from '../types.js';
+import type { IngestResult, WikiPageMeta, TriageResult } from '../types.js';
 import { FreshMindError } from '../types.js';
 import { readFile, writeFile, appendFile } from 'fs/promises';
 import { join } from 'path';
@@ -24,7 +25,18 @@ export class IngestAgent {
     this.pageReader = pageReader ?? null;
   }
 
-  async ingest(input: { url?: string; text?: string }): Promise<{
+  /** 对内容进行分类，决定提取深度 */
+  async triage(content: string): Promise<IngestDepth> {
+    try {
+      const messages = buildTriagePrompt(content);
+      const result = await this.llm.chatJSON<TriageResult>(messages);
+      return result.depth === 'brief' ? 'brief' : 'deep';
+    } catch {
+      return 'deep'; // 分类失败默认深度提取
+    }
+  }
+
+  async ingest(input: { url?: string; text?: string; depth?: IngestDepth }): Promise<{
     page_path: string;
     action: 'created' | 'updated' | 'skipped';
     claims_count: number;
@@ -76,8 +88,11 @@ export class IngestAgent {
       ? content.slice(0, MAX_CONTENT_LENGTH) + '\n\n[内容已截断，仅分析前 8000 字]'
       : content;
 
-    // 4. LLM 结构化提取
-    const messages = buildIngestPrompt(truncatedContent);
+    // 4. Triage 分类（如果未指定 depth）
+    const depth = input.depth ?? await this.triage(truncatedContent);
+
+    // 5. LLM 结构化提取（根据 depth 选择 prompt）
+    const messages = buildIngestPrompt(truncatedContent, depth);
     const result = await this.llm.chatJSON<IngestResult>(messages);
 
     // 5. 校验必要字段
@@ -135,6 +150,11 @@ ${result.related_concepts.map(c => `- [[concepts/${this.titleToSlug(c)}]]`).join
 
     // 11. 写入 wiki 页面
     const pagePath = await this.pageWriter.createPage(dir, slug, meta, pageContent);
+
+    // 11.5 注册 URL 到内存索引（防止并行写入竞态）
+    if (input.url && this.pageReader) {
+      this.pageReader.registerUrl(input.url, `${dir}/${slug}.md`);
+    }
 
     // 12. 存储原始内容到 raw/
     const rawFileName = `${today}-${slug}.md`;

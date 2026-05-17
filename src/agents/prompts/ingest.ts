@@ -1,5 +1,7 @@
 import type { Message } from '../../types.js';
 
+export type IngestDepth = 'brief' | 'deep';
+
 const INGEST_SYSTEM_PROMPT = `# 角色
 
 你是 FreshMind 系统的知识提取引擎，服务于 AI 行业产品经理。你的核心职责是从原始文章中提取**可随时间验证和追踪的结构化知识**，写入一个具有信息新鲜度管理能力的知识库。
@@ -66,9 +68,41 @@ AI PM（产品经理），关注：模型发布与评测、产品动态、行业
 - 格式：主体+核心动作+关键信息（如"Anthropic发布Claude 4.7-修复三项质量退化问题"）
 - 不要照搬英文原标题`;
 
-export function buildIngestPrompt(content: string): Message[] {
+const BRIEF_INGEST_SYSTEM_PROMPT = `# 角色
+
+你是 FreshMind 的快速摘要引擎。这篇文章被分类为**新闻/公告类**，只需提取核心事实。
+
+# 输出格式
+
+返回纯 JSON（不要 markdown 代码块）：
+
+{
+  "title": "中文标题，15-25字，主体+事件",
+  "summary": "一句话概括核心事实（who did what, when, how much）",
+  "type": "信息类型（benchmark_data | model_capability | product_update | company_strategy | industry_trend | person_move | tech_concept）",
+  "verifiable_claims": [
+    {
+      "claim": "最核心的 1-3 条事实，包含主体+数字/时间",
+      "search_query": "英文验证关键词",
+      "confidence": 0.9
+    }
+  ],
+  "entities": ["涉及的公司/产品/人物"],
+  "related_concepts": [],
+  "source_date": "YYYY-MM-DD"
+}
+
+# 规则
+
+- claims 最多 3 条，只保留最核心的事实
+- summary 必须一句话完成，不要写段落
+- 不要提取观点、评论、预测
+- 标题用中文，格式：主体+核心动作`;
+
+export function buildIngestPrompt(content: string, depth: IngestDepth = 'deep'): Message[] {
+  const systemPrompt = depth === 'brief' ? BRIEF_INGEST_SYSTEM_PROMPT : INGEST_SYSTEM_PROMPT;
   return [
-    { role: 'system', content: INGEST_SYSTEM_PROMPT },
+    { role: 'system', content: systemPrompt },
     { role: 'user', content: `分析以下内容：\n\n${content}` },
   ];
 }
