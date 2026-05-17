@@ -30,7 +30,7 @@ export const CRAWL_DEFAULTS = {
   maxArticlesPerSource: 3,
   lookbackHours: 72,
   delayMs: 500,
-  statePruneDays: 7,
+  statePruneDays: 90,
 } as const;
 
 /** LLM 默认配置 */

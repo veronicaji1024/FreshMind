@@ -69,6 +69,8 @@ export async function readAllPages(vaultPath: string): Promise<{
 
 /** Person B 的 PageReader 类封装 */
 export class PageReader {
+  private sourceUrlIndex: Map<string, string> | null = null;
+
   constructor(private vaultPath: string) {}
 
   async readPage(pagePath: string): Promise<{ meta: WikiPageMeta; content: string }> {
@@ -81,5 +83,19 @@ export class PageReader {
 
   async readAllPages(): Promise<{ path: string; meta: WikiPageMeta }[]> {
     return readAllPages(this.vaultPath);
+  }
+
+  /** 按 source URL 查找已有页面，返回页面路径或 null */
+  async findBySourceUrl(url: string): Promise<string | null> {
+    if (!this.sourceUrlIndex) {
+      this.sourceUrlIndex = new Map();
+      const pages = await this.readAllPages();
+      for (const page of pages) {
+        for (const src of page.meta.sources ?? []) {
+          this.sourceUrlIndex.set(src.url, page.path);
+        }
+      }
+    }
+    return this.sourceUrlIndex.get(url) ?? null;
   }
 }

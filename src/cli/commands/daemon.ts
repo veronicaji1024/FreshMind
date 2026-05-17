@@ -304,11 +304,13 @@ async function runCrawl(vaultPath: string): Promise<void> {
         try {
           const { LLMClient } = await import('../../agents/llm-client.js');
           const { PageWriter } = await import('../../wiki/page-writer.js');
+          const { PageReader } = await import('../../wiki/page-reader.js');
           const { IngestAgent } = await import('../../agents/ingest-agent.js');
 
           const llm = new LLMClient();
           const pageWriter = new PageWriter(vaultPath);
-          const ingestAgent = new IngestAgent(llm, pageWriter, vaultPath);
+          const pageReader = new PageReader(vaultPath);
+          const ingestAgent = new IngestAgent(llm, pageWriter, vaultPath, pageReader);
 
           const limit = pLimit(3);
           const ingestResults = await Promise.allSettled(

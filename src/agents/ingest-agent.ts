@@ -13,18 +13,36 @@ import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';
 
 export class IngestAgent {
+  private pageReader: PageReader | null;
+
   constructor(
     private llm: LLMClient,
     private pageWriter: PageWriter,
     private vaultPath: string,
-  ) {}
+    pageReader?: PageReader,
+  ) {
+    this.pageReader = pageReader ?? null;
+  }
 
   async ingest(input: { url?: string; text?: string }): Promise<{
     page_path: string;
-    action: 'created' | 'updated';
+    action: 'created' | 'updated' | 'skipped';
     claims_count: number;
     conflicts: string[];
   }> {
+    // 0. URL 去重：检查 vault 中是否已有同源 URL 的页面
+    if (input.url && this.pageReader) {
+      const existing = await this.pageReader.findBySourceUrl(input.url);
+      if (existing) {
+        return {
+          page_path: existing,
+          action: 'skipped',
+          claims_count: 0,
+          conflicts: [],
+        };
+      }
+    }
+
     // 1. 获取内容
     let content: string;
     if (input.text) {

@@ -46,11 +46,13 @@ export function registerCrawl(program: Command) {
 
             const { LLMClient } = await import('../../agents/llm-client.js');
             const { PageWriter } = await import('../../wiki/page-writer.js');
+            const { PageReader } = await import('../../wiki/page-reader.js');
             const { IngestAgent } = await import('../../agents/ingest-agent.js');
 
             const llm = new LLMClient();
             const pageWriter = new PageWriter(vaultPath);
-            const ingestAgent = new IngestAgent(llm, pageWriter, vaultPath);
+            const pageReader = new PageReader(vaultPath);
+            const ingestAgent = new IngestAgent(llm, pageWriter, vaultPath, pageReader);
 
             const limit = pLimit(concurrency);
             const results = await Promise.allSettled(
@@ -65,9 +67,15 @@ export function registerCrawl(program: Command) {
             );
 
             let ingested = 0;
+            let skipped = 0;
             for (const r of results) {
               if (r.status === 'fulfilled') {
                 const { item, ingestResult } = r.value;
+                if (ingestResult.action === 'skipped') {
+                  ui.info(`  ⏭️ 已存在: ${ingestResult.page_path}`);
+                  skipped++;
+                  continue;
+                }
                 ui.success(`  ✅ ${ingestResult.page_path} (${ingestResult.claims_count} 条声明)`);
                 ingested++;
               } else {

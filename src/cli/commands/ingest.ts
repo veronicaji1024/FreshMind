@@ -5,6 +5,7 @@ import { extractFromUrl } from '../../crawler/html.js';
 import { IngestAgent } from '../../agents/ingest-agent.js';
 import { LLMClient } from '../../agents/llm-client.js';
 import { PageWriter } from '../../wiki/page-writer.js';
+import { PageReader } from '../../wiki/page-reader.js';
 import { rebuildIndex } from '../../wiki/index-manager.js';
 
 export function registerIngest(program: Command) {
@@ -32,7 +33,8 @@ export function registerIngest(program: Command) {
             apiKey: config.llm.api_key,
           });
           const pageWriter = new PageWriter(config.vault_path);
-          const agent = new IngestAgent(llm, pageWriter, config.vault_path);
+          const pageReader = new PageReader(config.vault_path);
+          const agent = new IngestAgent(llm, pageWriter, config.vault_path, pageReader);
 
           const result = await agent.ingest({ url, text: opts.text });
 
