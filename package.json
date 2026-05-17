@@ -5,11 +5,11 @@
   "type": "module",
   "main": "dist/cli/index.js",
   "bin": {
-    "fm": "dist/cli/index.js"
+    "fm": "./src/cli/index.ts"
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
+    "dev": "bun run src/cli/index.ts",
     "start": "node dist/cli/index.js",
     "test": "vitest run",
     "test:watch": "vitest"

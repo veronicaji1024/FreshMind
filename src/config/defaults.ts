@@ -25,7 +25,7 @@ export const FRESHCHECK_DEFAULTS = {
   threshold: 0.75,
 } as const;
 
-/** Crawl 默认配置 */
+/** Crawl 默认配置 (Person A) */
 export const CRAWL_DEFAULTS = {
   maxArticlesPerSource: 3,
   lookbackHours: 72,
@@ -35,7 +35,7 @@ export const CRAWL_DEFAULTS = {
 
 /** LLM 默认配置 */
 export const LLM_DEFAULTS = {
-  model: 'moonshotai/Kimi-K2.6',
+  model: 'Pro/moonshotai/Kimi-K2.6',
   baseUrl: 'https://api.siliconflow.cn/v1',
   temperature: 0.3,
   maxTokens: 4096,
@@ -47,6 +47,15 @@ export const CALIBRATION_FACTORS = {
   manual_edit: 0.7,
   confirmed_3x: 1.3,
 } as const;
+
+/** Wiki 目录 → InfoType 映射 */
+export const DIR_TYPE_MAP: Record<string, InfoType[]> = {
+  entities: ['company_strategy', 'person_move'],
+  concepts: ['tech_concept'],
+  models: ['model_capability', 'benchmark_data'],
+  comparisons: ['model_capability'],
+  trends: ['industry_trend'],
+};
 
 /** 信息类型 → 默认存放目录 */
 export const TYPE_DIR_MAP: Record<InfoType, string> = {

@@ -15,6 +15,7 @@ const EXCLUDED_DIRS = new Set([
   'raw',
 ]);
 
+/** 读取单个页面（接受完整路径） */
 export async function readPage(filePath: string): Promise<{
   meta: WikiPageMeta;
   content: string;
@@ -27,6 +28,7 @@ export async function readPage(filePath: string): Promise<{
   };
 }
 
+/** 扫描 vault 下所有 wiki 页面 */
 export async function readAllPages(vaultPath: string): Promise<{
   path: string;
   meta: WikiPageMeta;
@@ -63,4 +65,21 @@ export async function readAllPages(vaultPath: string): Promise<{
 
   await scanDir(vaultPath);
   return results;
+}
+
+/** Person B 的 PageReader 类封装 */
+export class PageReader {
+  constructor(private vaultPath: string) {}
+
+  async readPage(pagePath: string): Promise<{ meta: WikiPageMeta; content: string }> {
+    const fullPath = pagePath.endsWith('.md')
+      ? path.join(this.vaultPath, pagePath)
+      : path.join(this.vaultPath, `${pagePath}.md`);
+
+    return readPage(fullPath);
+  }
+
+  async readAllPages(): Promise<{ path: string; meta: WikiPageMeta }[]> {
+    return readAllPages(this.vaultPath);
+  }
 }

@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import YAML from 'yaml';
 import dotenv from 'dotenv';
-import type { AppConfig } from '../types.js';
+import type { AppConfig, FreshMindConfig } from '../types.js';
 import { LLM_DEFAULTS, FRESHCHECK_DEFAULTS } from './defaults.js';
 
 dotenv.config();
@@ -24,7 +24,8 @@ function findConfigFile(vaultPath?: string): string | null {
   return null;
 }
 
-export async function loadConfig(vaultPathOverride?: string): Promise<AppConfig> {
+/** Person A 使用的配置加载 */
+export async function loadAppConfig(vaultPathOverride?: string): Promise<AppConfig> {
   const configFile = findConfigFile(vaultPathOverride);
 
   let fileConfig: Partial<AppConfig> = {};
@@ -54,4 +55,30 @@ export async function loadConfig(vaultPathOverride?: string): Promise<AppConfig>
       threshold: fileConfig.freshcheck?.threshold ?? FRESHCHECK_DEFAULTS.threshold,
     },
   };
+}
+
+/** Person B 使用的简化配置加载 */
+export async function loadConfig(vaultPath: string): Promise<FreshMindConfig> {
+  dotenv.config();
+
+  const config: FreshMindConfig = {
+    vaultPath,
+    siliconflowApiKey: process.env.SILICONFLOW_API_KEY,
+    tavilyApiKey: process.env.TAVILY_API_KEY,
+    llm: { ...LLM_DEFAULTS },
+  };
+
+  try {
+    const yamlPath = path.join(vaultPath, '.freshmind.yaml');
+    const content = await readFile(yamlPath, 'utf-8');
+    const yamlConfig = YAML.parse(content);
+
+    if (yamlConfig?.llm?.model) config.llm.model = yamlConfig.llm.model;
+    if (yamlConfig?.llm?.base_url) config.llm.baseUrl = yamlConfig.llm.base_url;
+    if (yamlConfig?.llm?.temperature) config.llm.temperature = yamlConfig.llm.temperature;
+  } catch {
+    // .freshmind.yaml 不存在则用默认值
+  }
+
+  return config;
 }
