@@ -28,7 +28,7 @@ export const FRESHCHECK_DEFAULTS = {
 /** Crawl 默认配置 (Person A) */
 export const CRAWL_DEFAULTS = {
   maxArticlesPerSource: 3,
-  lookbackHours: 72,
+  lookbackHours: 720,
   delayMs: 500,
   statePruneDays: 90,
 } as const;
