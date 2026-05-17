@@ -1,6 +1,7 @@
 import { FreshMindError } from '../types.js';
 import type { Message } from '../types.js';
 import { LLM_DEFAULTS } from '../config/defaults.js';
+import { fetchWithTimeout } from '../fetch-with-timeout.js';
 
 export interface LLMClientOptions {
   model?: string;
@@ -11,7 +12,7 @@ export interface LLMClientOptions {
 }
 
 const DEFAULT_MAX_RETRIES = 2;
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
 
 export class LLMClient {
   private model: string;
@@ -59,20 +60,20 @@ export class LLMClient {
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
-        const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        const response = await fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(body),
-          signal: AbortSignal.timeout(this.timeoutMs),
+          timeoutMs: this.timeoutMs,
         });
 
         if (!response.ok) {
           const errorText = await response.text().catch(() => response.statusText);
-          // 4xx 错误不重试（客户端问题）
-          if (response.status >= 400 && response.status < 500) {
+          // 4xx 错误不重试（客户端问题），429 除外
+          if (response.status >= 400 && response.status < 500 && response.status !== 429) {
             throw new FreshMindError(
               `SiliconFlow API 调用失败 (${response.status}): ${errorText}`,
               'LLM_API_ERROR',
@@ -84,7 +85,7 @@ export class LLMClient {
             'LLM_API_ERROR',
           );
           if (attempt < this.maxRetries) {
-            await sleep(1000 * (attempt + 1)); // 退避: 1s, 2s
+            await sleep(1000 * (attempt + 1));
             continue;
           }
           throw lastError;
@@ -102,10 +103,12 @@ export class LLMClient {
 
         return content;
       } catch (err) {
-        if (err instanceof FreshMindError && err.code === 'LLM_API_ERROR' && (err.message.includes('(4') && !err.message.includes('(429'))) {
-          throw err; // 4xx（非 429）不重试
+        if (err instanceof FreshMindError && err.code === 'LLM_API_ERROR') {
+          // 4xx（非 429）已在上面抛出，不会到这里
+          lastError = err;
+        } else {
+          lastError = err as Error;
         }
-        lastError = err as Error;
         if (attempt < this.maxRetries) {
           await sleep(1000 * (attempt + 1));
           continue;
@@ -144,7 +147,6 @@ function parseJSONResponse<T>(raw: string): T {
   const jsonStart = raw.search(/[{\[]/);
   if (jsonStart >= 0) {
     const candidate = raw.slice(jsonStart);
-    // 从后往前找匹配的 } 或 ]
     const closer = candidate[0] === '{' ? '}' : ']';
     const lastClose = candidate.lastIndexOf(closer);
     if (lastClose > 0) {

@@ -28,4 +28,22 @@ describe('calibrate', () => {
     hl = calibrate(hl, 'ignore'); // 101.25
     expect(hl).toBeCloseTo(45 * 1.5 * 1.5, 5);
   });
+
+  it('半衰期不会超过上限 1095 天', () => {
+    // 1000 * 1.5 = 1500 → 应被 clamp 到 1095
+    expect(calibrate(1000, 'ignore')).toBe(1095);
+  });
+
+  it('半衰期不会低于下限 7 天', () => {
+    // 8 * 0.7 = 5.6 → 应被 clamp 到 7
+    expect(calibrate(8, 'manual_edit')).toBe(7);
+  });
+
+  it('连续 ignore 最终被上限限制', () => {
+    let hl = 540;
+    for (let i = 0; i < 20; i++) {
+      hl = calibrate(hl, 'ignore');
+    }
+    expect(hl).toBe(1095);
+  });
 });

@@ -8,6 +8,9 @@ import { FreshMindError } from '../types.js';
 import { readFile, writeFile, appendFile } from 'fs/promises';
 import { join } from 'path';
 import { parse as parseYaml } from 'yaml';
+import { fetchWithTimeout } from '../fetch-with-timeout.js';
+import { JSDOM } from 'jsdom';
+import { Readability } from '@mozilla/readability';
 
 export class IngestAgent {
   constructor(
@@ -27,13 +30,16 @@ export class IngestAgent {
     if (input.text) {
       content = input.text;
     } else if (input.url) {
-      const res = await fetch(input.url);
+      const res = await fetchWithTimeout(input.url, { timeoutMs: 30_000 });
       if (!res.ok) {
         throw new FreshMindError(`无法获取 URL 内容: ${input.url}`, 'FETCH_ERROR');
       }
       const html = await res.text();
-      // MVP 简单提取：去除 HTML 标签
-      content = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      // 用 Readability 提取正文，保留文档结构
+      const dom = new JSDOM(html, { url: input.url });
+      const article = new Readability(dom.window.document).parse();
+      content = article?.textContent?.trim()
+        ?? html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     } else {
       throw new FreshMindError('必须提供 url 或 text', 'INVALID_INPUT');
     }
