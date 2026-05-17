@@ -1,0 +1,35 @@
+{
+  "seenItems": {
+    "https://www.anthropic.com/economic-futures": 1779002693995,
+    "https://www.anthropic.com/docs": 1779002693995,
+    "https://www.anthropic.com/engineering/april-23-postmortem": 1779002693995,
+    "https://www.a16z.news/p/charts-of-the-week-memory-to-the": 1779002700668,
+    "https://www.a16z.news/p/from-system-of-record-to-system-of": 1779002700668,
+    "https://www.lennysnewsletter.com/p/community-wisdom-screening-ai-slop": 1779002702458,
+    "https://simonwillison.net/2026/May/16/openclaw-names/#atom-everything": 1779002704553,
+    "https://simonwillison.net/2026/May/16/julia-evans/#atom-everything": 1779002704553,
+    "https://simonwillison.net/2026/May/15/inaturalist-clumper/#atom-everything": 1779002704553,
+    "https://www.latent.space/p/ainews-cerebras-60b-ipo-slowly-then": 1779002709592,
+    "https://www.latent.space/p/ainews-everything-is-conductor": 1779002709592,
+    "https://www.latent.space/p/abridge": 1779002709592,
+    "https://every.to/context-window/opus-4-7-reels-us-back-in": 1779002715356,
+    "https://every.to/context-window": 1779002715356,
+    "https://every.to/@laura_27bbaf_1": 1779002715356,
+    "https://www.ben-evans.com/benedictevans/2026/2/19/how-will-openai-compete-nkg2x": 1779002719861,
+    "https://www.ben-evans.com/benedictevans/2025/11/23/ai-networks-and-mechanical-turks": 1779002719861,
+    "https://www.ben-evans.com/benedictevans/2025/6/9/generative-ais-metrics-question": 1779002719861,
+    "https://garymarcus.substack.com/p/us-ai-policy-is-a-clumsy-mess-heres": 1779002720991,
+    "https://levels.io/reset-your-life/": 1779002725816,
+    "https://levels.io/future-of-digital-nomads/": 1779002725816,
+    "https://levels.io/the-greatest-migration": 1779002725816,
+    "https://openai.com/index/malta-chatgpt-plus-partnership": 1779002727980,
+    "https://openai.com/academy/codex-for-work/how-business-operations-teams-use-codex": 1779002727980,
+    "https://openai.com/index/databricks": 1779002727980
+  },
+  "lastCrawl": "2026-05-17T07:25:29.797Z",
+  "stats": {
+    "totalCrawls": 1,
+    "totalIngested": 25,
+    "totalSkipped": 0
+  }
+}

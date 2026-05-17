@@ -1,0 +1,76 @@
+blogs:
+  - id: anthropic-engineering
+    name: Anthropic Engineering
+    url: https://www.anthropic.com/engineering
+    rss: null
+    category: tech_progress
+    enabled: true
+  - id: a16z-news
+    name: a16z News
+    url: https://www.a16z.news
+    rss: https://www.a16z.news/feed
+    category: entrepreneurship
+    enabled: true
+  - id: lenny-newsletter
+    name: "Lenny's Newsletter"
+    url: https://www.lennysnewsletter.com
+    rss: https://www.lennysnewsletter.com/feed
+    category: product_management
+    enabled: true
+  - id: simon-willison
+    name: Simon Willison
+    url: https://simonwillison.net
+    rss: https://simonwillison.net/atom/everything/
+    category: practical
+    enabled: true
+  - id: one-useful-thing
+    name: One Useful Thing
+    url: https://www.oneusefulthing.org
+    rss: https://www.oneusefulthing.org/feed
+    category: practical
+    enabled: true
+  - id: latent-space
+    name: Latent Space
+    url: https://www.latent.space
+    rss: https://www.latent.space/feed
+    category: tech_progress
+    enabled: true
+  - id: every-to
+    name: Every.to
+    url: https://every.to
+    rss: null
+    category: tech_progress
+    enabled: true
+  - id: ben-evans
+    name: Ben Evans Newsletter
+    url: https://www.ben-evans.com/benedictevans
+    rss: null
+    category: macro_analysis
+    enabled: true
+  - id: gary-marcus
+    name: Gary Marcus
+    url: https://garymarcus.substack.com
+    rss: https://garymarcus.substack.com/feed
+    category: tech_critique
+    enabled: true
+  - id: levels-io
+    name: Levels.io Blog
+    url: https://levels.io
+    rss: null
+    category: indie_dev
+    enabled: true
+  - id: openai-blog
+    name: OpenAI Blog
+    url: https://openai.com/blog
+    rss: https://openai.com/blog/rss.xml
+    category: tech_progress
+    enabled: true
+  - id: huggingface-blog
+    name: Hugging Face Blog
+    url: https://huggingface.co/blog
+    rss: https://huggingface.co/blog/feed.xml
+    category: tech_progress
+    enabled: true
+
+x_accounts: []
+podcasts: []

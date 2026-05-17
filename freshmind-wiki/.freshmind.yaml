@@ -1,0 +1,16 @@
+# FreshMind 配置文件
+# 请在 .env 中设置 API Keys，不要写在这里
+
+llm:
+  provider: siliconflow
+  model: Pro/moonshotai/Kimi-K2.6
+  base_url: https://api.siliconflow.cn/v1
+  temperature: 0.3
+  max_tokens: 4096
+
+search:
+  provider: tavily
+
+freshcheck:
+  max_items: 10
+  threshold: 0.75

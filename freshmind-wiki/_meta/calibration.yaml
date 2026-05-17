@@ -1,0 +1,10 @@
+last_updated: 2026-05-17
+calibrated_half_life:
+  benchmark_data: 45
+  model_capability: 60
+  product_update: 120
+  company_strategy: 180
+  industry_trend: 180
+  person_move: 365
+  tech_concept: 540
+calibration_log: []
