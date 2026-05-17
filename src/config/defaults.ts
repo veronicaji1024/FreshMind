@@ -41,11 +41,12 @@ export const LLM_DEFAULTS = {
   maxTokens: 4096,
 } as const;
 
-/** 校准系数 */
+/** 校准系数（严格对齐 PRD 第九节） */
 export const CALIBRATION_FACTORS = {
-  ignore: 1.5,
-  manual_edit: 0.7,
-  confirmed_3x: 1.3,
+  ignore: 1.5,           // 🔴误报：信息没过时但系统说过时了 → 半衰期太短
+  manual_edit: 0.7,      // 🟢漏报：信息过时了但系统没发现 → 半衰期太长
+  skip_then_edit: 0.85,  // 🟡略长：暂不处理后30天内用户手动更新
+  confirmed_3x: 1.3,     // 连续3次confirmed：该声明已证明稳定
 } as const;
 
 /** Wiki 目录 → InfoType 映射 */

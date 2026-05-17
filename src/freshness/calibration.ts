@@ -79,6 +79,19 @@ export class CalibrationEngine {
   }
 }
 
+/**
+ * 校准半衰期（严格对齐 PRD 第九节 Layer 1）
+ *
+ * | 用户行为                          | 校准动作              |
+ * |----------------------------------|----------------------|
+ * | 🔴 执行 update                    | 不变（猜对了）         |
+ * | 🔴 执行 ignore                    | × 1.5（误报，太短了）  |
+ * | 🟢 用户主动编辑 (manual_edit)       | × 0.7（漏报，太长了）  |
+ * | 🟡 skip 后 30 天内编辑             | × 0.85（略长）        |
+ * | 🟡 skip 后一直没动                 | 不变                  |
+ * | 某 claim 连续 3 次 confirmed       | × 1.3（稳定）         |
+ * | archive                           | 不变                  |
+ */
 export function calibrate(
   currentHalfLife: number,
   action: CalibrationEvent['action'],
@@ -90,6 +103,8 @@ export function calibrate(
       return currentHalfLife * CALIBRATION_FACTORS.ignore;
     case 'manual_edit':
       return currentHalfLife * CALIBRATION_FACTORS.manual_edit;
+    case 'skip_then_edit':
+      return currentHalfLife * CALIBRATION_FACTORS.skip_then_edit;
     case 'confirmed_3x':
       return currentHalfLife * CALIBRATION_FACTORS.confirmed_3x;
     case 'archive':

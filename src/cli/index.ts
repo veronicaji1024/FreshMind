@@ -5,6 +5,7 @@ import { registerInit } from './commands/init.js';
 import { registerCrawl } from './commands/crawl.js';
 import { registerIngest } from './commands/ingest.js';
 import { registerSources } from './commands/sources.js';
+import { registerDaemon } from './commands/daemon.js';
 import { freshcheckCommand } from './commands/freshcheck.js';
 import { queryCommand } from './commands/query.js';
 import { updateCommand } from './commands/update.js';
@@ -23,6 +24,7 @@ registerInit(program);
 registerCrawl(program);
 registerIngest(program);
 registerSources(program);
+registerDaemon(program);
 
 // Person B 的命令
 program.addCommand(freshcheckCommand);

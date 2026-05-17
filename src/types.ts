@@ -90,7 +90,7 @@ export interface VerificationResult {
 
 export interface CalibrationEvent {
   type: InfoType;
-  action: 'update' | 'archive' | 'ignore' | 'manual_edit' | 'confirmed_3x';
+  action: 'update' | 'archive' | 'ignore' | 'manual_edit' | 'confirmed_3x' | 'skip_then_edit';
   page_path: string;
   timestamp: string;
 }
