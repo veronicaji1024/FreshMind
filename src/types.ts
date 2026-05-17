@@ -42,7 +42,7 @@ export interface VerifiableClaim {
 // ===== 内容分类 =====
 
 export interface TriageResult {
-  depth: 'brief' | 'deep';
+  depth: 'skip' | 'brief' | 'deep';
   reason: string;
 }
 

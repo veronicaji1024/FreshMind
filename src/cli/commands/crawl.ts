@@ -81,8 +81,13 @@ export function registerCrawl(program: Command) {
                 ingested++;
               } else {
                 const errMsg = r.reason?.message ?? String(r.reason);
-                // 从错误信息中提取 URL 或标题
-                ui.warn(`  ⚠️ ingest 失败: ${errMsg}`);
+                const isSkip = r.reason?.code === 'TRIAGE_SKIP' || r.reason?.code === 'NO_CLAIMS' || r.reason?.code === 'CONTENT_TOO_SHORT';
+                if (isSkip) {
+                  ui.info(`  🚫 跳过: ${errMsg}`);
+                  skipped++;
+                } else {
+                  ui.warn(`  ⚠️ ingest 失败: ${errMsg}`);
+                }
               }
             }
 

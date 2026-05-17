@@ -30,7 +30,9 @@ export class IngestAgent {
     try {
       const messages = buildTriagePrompt(content);
       const result = await this.llm.chatJSON<TriageResult>(messages);
-      return result.depth === 'brief' ? 'brief' : 'deep';
+      if (result.depth === 'skip') return 'skip';
+      if (result.depth === 'brief') return 'brief';
+      return 'deep';
     } catch {
       return 'deep'; // 分类失败默认深度提取
     }
@@ -90,6 +92,14 @@ export class IngestAgent {
 
     // 4. Triage 分类（如果未指定 depth）
     const depth = input.depth ?? await this.triage(truncatedContent);
+
+    // 4.5 skip 类型直接丢弃
+    if (depth === 'skip') {
+      throw new FreshMindError(
+        '内容被 Triage 判定为无价值，跳过',
+        'TRIAGE_SKIP',
+      );
+    }
 
     // 5. LLM 结构化提取（根据 depth 选择 prompt）
     const messages = buildIngestPrompt(truncatedContent, depth);

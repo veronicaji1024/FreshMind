@@ -1,6 +1,6 @@
 import type { Message } from '../../types.js';
 
-export type IngestDepth = 'brief' | 'deep';
+export type IngestDepth = 'skip' | 'brief' | 'deep';
 
 const INGEST_SYSTEM_PROMPT = `# 角色
 
@@ -70,19 +70,19 @@ AI PM（产品经理），关注：模型发布与评测、产品动态、行业
 
 const BRIEF_INGEST_SYSTEM_PROMPT = `# 角色
 
-你是 FreshMind 的快速摘要引擎。这篇文章被分类为**新闻/公告类**，只需提取核心事实。
+你是 FreshMind 的快速摘要引擎，服务于 AI 行业产品经理。这篇文章是新闻/公告类，提取核心事实并点明对 AI PM 的意义。
 
 # 输出格式
 
 返回纯 JSON（不要 markdown 代码块）：
 
 {
-  "title": "中文标题，15-25字，主体+事件",
-  "summary": "一句话概括核心事实（who did what, when, how much）",
+  "title": "中文标题，15-25字，主体+事件+关键数字",
+  "summary": "2-3句话：第一句说事实（who did what, when, how much），第二句说 so what（对行业/产品/竞争格局意味着什么）",
   "type": "信息类型（benchmark_data | model_capability | product_update | company_strategy | industry_trend | person_move | tech_concept）",
   "verifiable_claims": [
     {
-      "claim": "最核心的 1-3 条事实，包含主体+数字/时间",
+      "claim": "核心事实，必须包含主体+具体数字或时间",
       "search_query": "英文验证关键词",
       "confidence": 0.9
     }
@@ -94,10 +94,11 @@ const BRIEF_INGEST_SYSTEM_PROMPT = `# 角色
 
 # 规则
 
-- claims 最多 3 条，只保留最核心的事实
-- summary 必须一句话完成，不要写段落
+- claims 1-3 条，只保留最核心的、有数字/时间的事实
+- summary 第一句说 what happened，第二句说 why it matters to AI PM
 - 不要提取观点、评论、预测
-- 标题用中文，格式：主体+核心动作`;
+- 标题必须包含关键数字（融资金额、用户数等），如"OpenAI与马耳他合作-向全体公民免费提供ChatGPT Plus"
+- 如果文章没有任何具体数字或可验证事实，claims 返回空数组`;
 
 export function buildIngestPrompt(content: string, depth: IngestDepth = 'deep'): Message[] {
   const systemPrompt = depth === 'brief' ? BRIEF_INGEST_SYSTEM_PROMPT : INGEST_SYSTEM_PROMPT;
