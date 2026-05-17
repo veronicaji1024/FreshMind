@@ -1,0 +1,43 @@
+{
+  "name": "freshmind",
+  "version": "0.1.0",
+  "description": "AI PM 知识保鲜系统 — 自动监控信息源，主动告诉你哪些认知过时了",
+  "type": "module",
+  "main": "dist/cli/index.js",
+  "bin": {
+    "fm": "dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "knowledge-management",
+    "freshness",
+    "wiki",
+    "ai-pm"
+  ],
+  "author": "jizixuan",
+  "license": "MIT",
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "chalk": "^5.6.2",
+    "cheerio": "^1.2.0",
+    "commander": "^14.0.3",
+    "dotenv": "^17.4.2",
+    "gray-matter": "^4.0.3",
+    "jsdom": "^29.1.1",
+    "ora": "^9.4.0",
+    "rss-parser": "^3.13.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^28.0.3",
+    "@types/node": "^25.8.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
+  }
+}

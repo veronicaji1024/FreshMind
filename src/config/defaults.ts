@@ -1,0 +1,71 @@
+import type { InfoType } from '../types.js';
+
+/** 信息类型 → 默认半衰期（天） */
+export const DEFAULT_HALF_LIFE: Record<InfoType, number> = {
+  benchmark_data: 45,
+  model_capability: 60,
+  product_update: 120,
+  company_strategy: 180,
+  industry_trend: 180,
+  person_move: 365,
+  tech_concept: 540,
+};
+
+/** 新鲜度分数 → 状态阈值 */
+export const FRESHNESS_THRESHOLDS = {
+  fresh: 0.75,
+  stale: 0.50,
+  outdated: 0.25,
+  expired: 0,
+} as const;
+
+/** 保鲜检查默认配置 */
+export const FRESHCHECK_DEFAULTS = {
+  maxItems: 10,
+  threshold: 0.75,
+} as const;
+
+/** Crawl 默认配置 */
+export const CRAWL_DEFAULTS = {
+  maxArticlesPerSource: 3,
+  lookbackHours: 72,
+  delayMs: 500,
+  statePruneDays: 7,
+} as const;
+
+/** LLM 默认配置 */
+export const LLM_DEFAULTS = {
+  model: 'moonshotai/Kimi-K2.6',
+  baseUrl: 'https://api.siliconflow.cn/v1',
+  temperature: 0.3,
+  maxTokens: 4096,
+} as const;
+
+/** 校准系数 */
+export const CALIBRATION_FACTORS = {
+  ignore: 1.5,
+  manual_edit: 0.7,
+  confirmed_3x: 1.3,
+} as const;
+
+/** 信息类型 → 默认存放目录 */
+export const TYPE_DIR_MAP: Record<InfoType, string> = {
+  benchmark_data: 'models',
+  model_capability: 'models',
+  product_update: 'entities',
+  company_strategy: 'entities',
+  industry_trend: 'trends',
+  person_move: 'entities',
+  tech_concept: 'concepts',
+};
+
+/** Wiki vault 子目录列表 */
+export const VAULT_DIRS = [
+  'entities',
+  'concepts',
+  'models',
+  'comparisons',
+  'trends',
+  'raw',
+  '_meta',
+] as const;
