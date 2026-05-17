@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import YAML from 'yaml';
 import { ui } from '../ui.js';
-import { loadConfig } from '../../config/config.js';
+import { loadAppConfig } from '../../config/config.js';
 import type { SourcesConfig, BlogSource } from '../../types.js';
 
 async function loadSources(vaultPath: string): Promise<SourcesConfig> {
@@ -28,7 +28,7 @@ export function registerSources(program: Command) {
     .description('列出所有信息源')
     .option('--vault <path>', 'vault 目录路径')
     .action(async (opts) => {
-      const config = await loadConfig(opts.vault);
+      const config = await loadAppConfig(opts.vault);
       const sources = await loadSources(config.vault_path);
 
       console.log('\n📰 博客/Newsletter（已启用）:');
@@ -59,7 +59,7 @@ export function registerSources(program: Command) {
     .option('--category <cat>', '类别', 'general')
     .option('--vault <path>', 'vault 目录路径')
     .action(async (opts) => {
-      const config = await loadConfig(opts.vault);
+      const config = await loadAppConfig(opts.vault);
       const sources = await loadSources(config.vault_path);
 
       const id = opts.name?.toLowerCase().replace(/\s+/g, '-')
@@ -84,7 +84,7 @@ export function registerSources(program: Command) {
     .description('删除信息源')
     .option('--vault <path>', 'vault 目录路径')
     .action(async (id, opts) => {
-      const config = await loadConfig(opts.vault);
+      const config = await loadAppConfig(opts.vault);
       const sources = await loadSources(config.vault_path);
 
       const idx = sources.blogs.findIndex(b => b.id === id);
@@ -103,7 +103,7 @@ export function registerSources(program: Command) {
     .description('启用信息源')
     .option('--vault <path>', 'vault 目录路径')
     .action(async (id, opts) => {
-      const config = await loadConfig(opts.vault);
+      const config = await loadAppConfig(opts.vault);
       const sources = await loadSources(config.vault_path);
       const source = sources.blogs.find(b => b.id === id);
       if (!source) { ui.error(`未找到: ${id}`); return; }
@@ -117,7 +117,7 @@ export function registerSources(program: Command) {
     .description('禁用信息源')
     .option('--vault <path>', 'vault 目录路径')
     .action(async (id, opts) => {
-      const config = await loadConfig(opts.vault);
+      const config = await loadAppConfig(opts.vault);
       const sources = await loadSources(config.vault_path);
       const source = sources.blogs.find(b => b.id === id);
       if (!source) { ui.error(`未找到: ${id}`); return; }

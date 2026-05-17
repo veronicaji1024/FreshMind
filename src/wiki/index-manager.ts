@@ -3,11 +3,12 @@ import path from 'path';
 import { readAllPages } from './page-reader.js';
 import type { WikiPageMeta, FreshnessStatus } from '../types.js';
 
-const STATUS_EMOJI: Record<FreshnessStatus, string> = {
+const STATUS_EMOJI: Record<string, string> = {
   fresh: '🟢',
   stale: '🟡',
   outdated: '🟠',
   expired: '🔴',
+  archived: '📦',
 };
 
 export async function rebuildIndex(vaultPath: string): Promise<void> {

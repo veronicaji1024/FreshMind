@@ -1,7 +1,11 @@
 import { Command } from 'commander';
 import { ui } from '../ui.js';
-import { loadConfig } from '../../config/config.js';
+import { loadAppConfig } from '../../config/config.js';
 import { extractFromUrl } from '../../crawler/html.js';
+import { IngestAgent } from '../../agents/ingest-agent.js';
+import { LLMClient } from '../../agents/llm-client.js';
+import { PageWriter } from '../../wiki/page-writer.js';
+import { rebuildIndex } from '../../wiki/index-manager.js';
 
 export function registerIngest(program: Command) {
   program
@@ -15,33 +19,62 @@ export function registerIngest(program: Command) {
         process.exit(1);
       }
 
-      const config = await loadConfig(opts.vault);
-      const spinner = ui.spin('正在提取内容...');
+      const config = await loadAppConfig(opts.vault);
+      const hasApiKey = !!process.env.SILICONFLOW_API_KEY;
 
-      try {
-        let content: string;
-        let title: string;
+      if (hasApiKey) {
+        // 有 API Key → 完整 IngestAgent 流程
+        const spinner = ui.spin('正在通过 LLM 提取并写入 wiki...');
+        try {
+          const llm = new LLMClient({
+            model: config.llm.model,
+            baseUrl: config.llm.base_url,
+            apiKey: config.llm.api_key,
+          });
+          const pageWriter = new PageWriter(config.vault_path);
+          const agent = new IngestAgent(llm, pageWriter, config.vault_path);
 
-        if (url) {
-          const extracted = await extractFromUrl(url);
-          content = extracted.content;
-          title = extracted.title;
-        } else {
-          content = opts.text;
-          title = content.slice(0, 50) + '...';
+          const result = await agent.ingest({ url, text: opts.text });
+
+          spinner.succeed(`已写入 wiki: ${result.page_path}`);
+          ui.info(`动作: ${result.action}`);
+          ui.info(`提取声明数: ${result.claims_count}`);
+
+          // 自动更新索引
+          await rebuildIndex(config.vault_path);
+          ui.success('索引已更新');
+        } catch (err) {
+          spinner.fail('Ingest 失败');
+          ui.error((err as Error).message);
+          process.exit(1);
         }
+      } else {
+        // 无 API Key → 确定性降级：仅提取正文
+        ui.warn('未设置 SILICONFLOW_API_KEY，降级为纯内容提取模式');
+        const spinner = ui.spin('正在提取内容...');
 
-        spinner.succeed(`提取完成: ${title}`);
-        ui.info(`内容长度: ${content.length} 字符`);
+        try {
+          let content: string;
+          let title: string;
 
-        // TODO: Day 2 集成时替换为调用 IngestAgent + PageWriter
-        ui.warn('Ingest Agent 尚未集成，仅展示提取结果');
-        console.log();
-        console.log(content.slice(0, 500) + '...');
-      } catch (err) {
-        spinner.fail('提取失败');
-        ui.error((err as Error).message);
-        process.exit(1);
+          if (url) {
+            const extracted = await extractFromUrl(url);
+            content = extracted.content;
+            title = extracted.title;
+          } else {
+            content = opts.text;
+            title = content.slice(0, 50) + '...';
+          }
+
+          spinner.succeed(`提取完成: ${title}`);
+          ui.info(`内容长度: ${content.length} 字符`);
+          console.log();
+          console.log(content.slice(0, 500) + '...');
+        } catch (err) {
+          spinner.fail('提取失败');
+          ui.error((err as Error).message);
+          process.exit(1);
+        }
       }
     });
 }

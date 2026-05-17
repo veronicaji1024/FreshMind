@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { ui } from '../ui.js';
-import { loadConfig } from '../../config/config.js';
+import { loadAppConfig } from '../../config/config.js';
 import { CrawlAgent } from '../../crawler/index.js';
 
 export function registerCrawl(program: Command) {
@@ -9,7 +9,7 @@ export function registerCrawl(program: Command) {
     .description('抓取所有已启用信息源的新内容')
     .option('--vault <path>', 'vault 目录路径')
     .action(async (opts) => {
-      const config = await loadConfig(opts.vault);
+      const config = await loadAppConfig(opts.vault);
       const spinner = ui.spin('正在抓取博客源...');
 
       try {
